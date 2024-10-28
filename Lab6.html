@@ -1,0 +1,64 @@
+<html>
+    <head>
+        <title>Lab 6</title>
+        <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+        <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin="" defer></script>
+        <style>
+            #map {
+            height: 500px;
+        }
+        #coordinates {
+            margin-top: 15px;}
+        </style>
+    </head>
+    <body>
+        <h1> Map of US</h1>
+        <div id="map"></div>
+
+        <div id="coordinates">
+            <p id="marker1">Marker 1:<span class="coord"></span><br><span class="locality"></span></p>
+            <p id="marker2">Marker 2:<span class="coord"></span><br><span class="locality"></span></p>
+            <p id="marker3">Marker 3:<span class="coord"></span><br><span class="locality"></span></p>
+        </div>
+        <script>
+            window.onload = function(){
+            function getRandomInRange(from, to, fixed) {
+            return (Math.random() * (to - from) + from).toFixed(fixed) * 1;}
+            
+            function getRandomCoordinates() {
+            const lat = getRandomInRange(30, 35, 3);
+            const lng = getRandomInRange(-100, -90, 3);
+            return [lat, lng];}
+
+            async function fetchLocality(lat, lng, index) {
+                const url = `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lng}&localityLanguage=en`;
+                try {
+                    const response = await fetch(url);
+                    const data = await response.json();
+                    const locality = data.locality || "Unknown";
+                    document.querySelector(`#marker${index + 1} .locality`).innerText = `Locality: ${locality}`;
+                } catch (error) {console.error("Error fetching locality:", error);
+                }
+            }
+
+            
+            var map = L.map("map").setView([32.5, -95], 5);
+            L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                maxZoom: 19,
+                attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+            }).addTo(map);
+    
+            const randomCoordinates = Array.from({ length: 3 }, getRandomCoordinates);
+
+            randomCoordinates.forEach((coord, index) => {
+                const marker = L.marker(coord).addTo(map);
+                marker.bindPopup(`Marker ${index + 1}: ${coord[0]}, ${coord[1]}`);
+                document.querySelector(`#marker${index + 1} .coord`).innerText = `${coord[0]}, ${coord[1]}`;
+                fetchLocality(coord[0], coord[1], index);
+            });
+        }
+        </script>
+    </body>
+</html>
